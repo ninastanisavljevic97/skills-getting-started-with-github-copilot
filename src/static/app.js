@@ -20,28 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        // Create participants section
-        const participantsSection = document.createElement("div");
-        participantsSection.className = "participants-section";
-        const participantsTitle = document.createElement("strong");
-        participantsTitle.textContent = "Participants:";
-        participantsSection.appendChild(participantsTitle);
-
-        if (details.participants.length > 0) {
-          const participantsList = document.createElement("ul");
-          participantsList.className = "participants-list";
-          details.participants.forEach((participant) => {
-            const li = document.createElement("li");
-            li.textContent = participant;
-            participantsList.appendChild(li);
-          });
-          participantsSection.appendChild(participantsList);
-        } else {
-          const noParticipants = document.createElement("span");
-          noParticipants.textContent = " None yet!";
-          participantsSection.appendChild(noParticipants);
-        }
-
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
@@ -49,7 +27,24 @@ document.addEventListener("DOMContentLoaded", () => {
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
         `;
 
-        // Insert participants section after availability
+        // Add pretty participants section
+        const participantsSection = document.createElement("div");
+        participantsSection.className = "participants-section";
+        participantsSection.innerHTML = `<strong>Participants:</strong>`;
+        if (details.participants.length > 0) {
+          const ul = document.createElement("ul");
+          ul.className = "participants-list";
+          details.participants.forEach((participant) => {
+            const li = document.createElement("li");
+            li.textContent = participant;
+            ul.appendChild(li);
+          });
+          participantsSection.appendChild(ul);
+        } else {
+          const none = document.createElement("span");
+          none.textContent = " None yet!";
+          participantsSection.appendChild(none);
+        }
         activityCard.appendChild(participantsSection);
 
         activitiesList.appendChild(activityCard);
@@ -62,29 +57,35 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // Add minimal styling for participants section
-      const style = document.createElement("style");
-      style.textContent = `
-        .participants-section {
-          margin-top: 0.5em;
-          padding: 0.5em;
-          background: #f7f7fa;
-          border-radius: 6px;
-        }
-        .participants-section strong {
-          display: block;
-          margin-bottom: 0.3em;
-          color: #333;
-        }
-        .participants-list {
-          margin: 0;
-          padding-left: 1.2em;
-        }
-        .participants-list li {
-          font-size: 0.97em;
-          color: #555;
-        }
-      `;
-      document.head.appendChild(style);
+      if (!document.getElementById("participants-section-style")) {
+        const style = document.createElement("style");
+        style.id = "participants-section-style";
+        style.textContent = `
+          .participants-section {
+            margin-top: 0.5em;
+            padding: 0.5em 0.8em;
+            background: #f7f7fa;
+            border-radius: 6px;
+            border: 1px solid #e0e0ef;
+          }
+          .participants-section strong {
+            display: block;
+            margin-bottom: 0.3em;
+            color: #333;
+            font-size: 1em;
+          }
+          .participants-list {
+            margin: 0;
+            padding-left: 1.2em;
+          }
+          .participants-list li {
+            font-size: 0.97em;
+            color: #555;
+            margin-bottom: 0.1em;
+          }
+        `;
+        document.head.appendChild(style);
+      }
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
       console.error("Error fetching activities:", error);
