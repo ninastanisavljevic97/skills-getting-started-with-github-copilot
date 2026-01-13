@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
       activitiesList.innerHTML = "";
 
       // Populate activities list
+
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
         activityCard.className = "activity-card";
@@ -33,10 +34,56 @@ document.addEventListener("DOMContentLoaded", () => {
         participantsSection.innerHTML = `<strong>Participants:</strong>`;
         if (details.participants.length > 0) {
           const ul = document.createElement("ul");
-          ul.className = "participants-list";
+          ul.className = "participants-list no-bullets";
           details.participants.forEach((participant) => {
             const li = document.createElement("li");
-            li.textContent = participant;
+            li.style.display = "flex";
+            li.style.alignItems = "center";
+            // Participant email
+            const span = document.createElement("span");
+            span.textContent = participant;
+            // Delete icon
+            const delBtn = document.createElement("button");
+            delBtn.innerHTML = "&#128465;"; // Trash can emoji
+            delBtn.title = "Remove participant";
+            delBtn.className = "delete-participant-btn";
+            delBtn.style.marginLeft = "8px";
+            delBtn.style.background = "none";
+            delBtn.style.border = "none";
+            delBtn.style.cursor = "pointer";
+            delBtn.style.color = "#c62828";
+            delBtn.style.fontSize = "1em";
+            delBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              if (!confirm(`Remove ${participant} from ${name}?`)) return;
+              try {
+                const response = await fetch(`/activities/${encodeURIComponent(name)}/unregister?email=${encodeURIComponent(participant)}`, {
+                  method: "POST",
+                });
+                const result = await response.json();
+                if (response.ok) {
+                  messageDiv.textContent = result.message || "Participant removed.";
+                  messageDiv.className = "success";
+                  fetchActivities();
+                } else {
+                  messageDiv.textContent = result.detail || "Failed to remove participant.";
+                  messageDiv.className = "error";
+                }
+                messageDiv.classList.remove("hidden");
+                setTimeout(() => {
+                  messageDiv.classList.add("hidden");
+                }, 5000);
+              } catch (error) {
+                messageDiv.textContent = "Error removing participant.";
+                messageDiv.className = "error";
+                messageDiv.classList.remove("hidden");
+                setTimeout(() => {
+                  messageDiv.classList.add("hidden");
+                }, 5000);
+              }
+            });
+            li.appendChild(span);
+            li.appendChild(delBtn);
             ul.appendChild(li);
           });
           participantsSection.appendChild(ul);
@@ -56,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         activitySelect.appendChild(option);
       });
 
-      // Add minimal styling for participants section
+      // Add minimal styling for participants section and hide bullets
       if (!document.getElementById("participants-section-style")) {
         const style = document.createElement("style");
         style.id = "participants-section-style";
@@ -76,12 +123,24 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           .participants-list {
             margin: 0;
-            padding-left: 1.2em;
+            padding-left: 0;
+            list-style: none;
           }
           .participants-list li {
             font-size: 0.97em;
             color: #555;
             margin-bottom: 0.1em;
+          }
+          .delete-participant-btn {
+            margin-left: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #c62828;
+            font-size: 1em;
+          }
+          .delete-participant-btn:hover {
+            color: #a31515;
           }
         `;
         document.head.appendChild(style);
@@ -113,6 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh activities list to show new participant
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
